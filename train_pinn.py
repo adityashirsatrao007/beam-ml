@@ -354,7 +354,7 @@ def load_and_prepare():
     X_sc     = scaler_X.fit_transform(X_raw).astype(np.float32)
     y_sc     = scaler_y.fit_transform(y_raw).astype(np.float32)
 
-    X_tv, X_test_raw, X_tv_sc, X_test_sc, y_tv_raw, y_test_raw, y_tv_sc, y_test_sc = \
+    X_tv_raw, X_test_raw, X_tv_sc, X_test_sc, y_tv_raw, y_test_raw, y_tv_sc, y_test_sc = \
         train_test_split(X_raw, X_sc, y_raw, y_sc, test_size=0.15, random_state=42)
 
     X_tr_raw, X_val_raw, X_tr_sc, X_val_sc, y_tr_raw, y_val_raw, y_tr_sc, y_val_sc = \
