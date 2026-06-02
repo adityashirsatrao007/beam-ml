@@ -1,0 +1,28 @@
+{
+  "model": "BeamNet (PyTorch)",
+  "train_rows": 23123,
+  "val_rows": 4955,
+  "test_rows": 4955,
+  "features": [
+    "X",
+    "L",
+    "Section",
+    "EC_SS",
+    "EC_SF",
+    "EC_FF"
+  ],
+  "targets": [
+    "Slope",
+    "Deflection"
+  ],
+  "metrics": {
+    "Slope": {
+      "MAE": 0.028321,
+      "R2": 0.995269
+    },
+    "Deflection": {
+      "MAE": 0.043206,
+      "R2": 0.989872
+    }
+  }
+}
