@@ -7,12 +7,17 @@ from diagrams.programming.framework import Flask
 
 graph_attr = {
     "fontsize": "14",
-    "bgcolor": "#1C1C1E",        # dark background matching Apple HIG
-    "fontcolor": "white",
+    "bgcolor": "#FFFFFF",        # light background for high contrast
+    "fontcolor": "black",
     "pad": "0.5",
     "splines": "curved",
     "nodesep": "0.6",
     "ranksep": "0.8",
+}
+
+node_attr = {
+    "fontsize": "12",
+    "fontcolor": "black",
 }
 
 with Diagram(
@@ -22,8 +27,10 @@ with Diagram(
     show=False,
     direction="LR",
     graph_attr=graph_attr,
+    node_attr=node_attr,
 ):
-    user = Users("Civil Engineers\n(Sagar & Aditya)")
+    user = Users("Civil Engineer\n(Sagar Kore)")
+
 
     with Cluster("Web Dashboard"):
         ui = Server("HTML/JS UI\n(Chart.js & SVG)")
@@ -33,9 +40,10 @@ with Diagram(
         pinn = Python("BeamPINN Model\n(Physics-Informed)")
         net = Python("BeamNet Model\n(Standard MLP)")
 
-    user >> Edge(color="white", label="interacts") >> ui
-    ui >> Edge(color="white", label="requests API") >> api
-    api >> Edge(color="#00E676", label="loads weights") >> pinn
-    api >> Edge(color="#FF6B6B", label="loads weights") >> net
+    user >> Edge(color="black", label="interacts") >> ui
+    ui >> Edge(color="black", label="requests API") >> api
+    api >> Edge(color="#006400", label="loads weights") >> pinn
+    api >> Edge(color="#8B0000", label="loads weights") >> net
+
 
 print("✅ docs/images/architecture.png generated")

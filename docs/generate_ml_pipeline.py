@@ -2,9 +2,9 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-# For ML pipelines without cloud icons, use pure matplotlib
-fig, ax = plt.subplots(1, 1, figsize=(16, 6), facecolor='#1C1C1E')
-ax.set_facecolor('#1C1C1E')
+# For ML pipelines, use white background
+fig, ax = plt.subplots(1, 1, figsize=(16, 6), facecolor='#FFFFFF')
+ax.set_facecolor('#FFFFFF')
 ax.set_xlim(0, 10)
 ax.set_ylim(0, 4)
 ax.axis('off')
@@ -23,12 +23,12 @@ for i, (label, x, color) in enumerate(steps):
     box = mpatches.FancyBboxPatch(
         (x - 0.62, 1.3), 1.24, 1.4,
         boxstyle="round,pad=0.1",
-        facecolor=color, edgecolor='white', linewidth=1.5, alpha=0.9
+        facecolor=color, edgecolor='black', linewidth=1.5, alpha=0.9
     )
     ax.add_patch(box)
     
-    # Use dark text for bright yellow for contrast
-    text_color = 'black' if color == "#FFD60A" else 'white'
+    # Use dark text for contrast on all boxes
+    text_color = 'black'
     
     ax.text(x, 2.0, label, ha='center', va='center',
             fontsize=8, fontweight='bold', color=text_color,
@@ -36,10 +36,11 @@ for i, (label, x, color) in enumerate(steps):
     if i < len(steps) - 1:
         ax.annotate('', xy=(steps[i+1][1] - 0.63, 2.0),
                     xytext=(x + 0.63, 2.0),
-                    arrowprops=dict(arrowstyle='->', color='white', lw=2))
+                    arrowprops=dict(arrowstyle='->', color='black', lw=2))
 
-ax.set_title('BeamML Training & Deployment Pipeline', color='white', fontsize=18,
+ax.set_title('BeamML Training & Deployment Pipeline', color='black', fontsize=18,
              fontweight='bold', pad=20)
+
 plt.tight_layout()
 plt.savefig('docs/images/ml-pipeline.png', dpi=200,
             bbox_inches='tight', facecolor='#1C1C1E')
