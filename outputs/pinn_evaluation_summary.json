@@ -1,0 +1,21 @@
+{
+  "model": "BeamPINN (PyTorch)",
+  "train_rows": 23123,
+  "test_rows": 4955,
+  "physics_losses": {
+    "lambda_kinematic": 0.5,
+    "lambda_bc": 0.3,
+    "lambda_moment": 0.1
+  },
+  "metrics": {
+    "Slope": {
+      "MAE": 0.003539,
+      "R2": 0.999908
+    },
+    "Deflection": {
+      "MAE": 0.002963,
+      "R2": 0.999955
+    }
+  },
+  "kinematic_residual": 0.006552
+}

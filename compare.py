@@ -219,15 +219,21 @@ def kinematic_residual(model, X_raw, use_pinn=True):
 
     if use_pinn:
         pred = model.forward_raw(X_with_sec)
+        slope_p = pred[:, 0:1]
+        w_p = pred[:, 1:2]
     else:
         scaler_X = joblib.load(MODEL_DIR / "scaler_X.pkl")
         scaler_y = joblib.load(MODEL_DIR / "scaler_y.pkl")
-        X_sc = scaler_X.transform(X_raw)
-        pred_sc = model(torch.tensor(X_sc, dtype=torch.float32))
-        pred = torch.tensor(scaler_y.inverse_transform(pred_sc.detach().numpy()), dtype=torch.float32)
+        X_mean_t = torch.tensor(scaler_X.mean_, dtype=torch.float32)
+        X_std_t = torch.tensor(scaler_X.scale_, dtype=torch.float32)
+        y_mean_t = torch.tensor(scaler_y.mean_, dtype=torch.float32)
+        y_std_t = torch.tensor(scaler_y.scale_, dtype=torch.float32)
 
-    slope_p = pred[:, 0:1]
-    w_p = pred[:, 1:2]
+        X_sc = (X_with_sec - X_mean_t) / X_std_t
+        pred_sc = model(X_sc)
+        pred = pred_sc * y_std_t + y_mean_t
+        slope_p = pred[:, 0:1]
+        w_p = pred[:, 1:2]
 
     dw_dx = torch.autograd.grad(
         w_p, sec,

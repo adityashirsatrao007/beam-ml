@@ -1,0 +1,28 @@
+{
+  "BeamNet": {
+    "metrics": {
+      "Slope": {
+        "MAE": 0.028321,
+        "R2": 0.995269
+      },
+      "Deflection": {
+        "MAE": 0.043206,
+        "R2": 0.989872
+      }
+    },
+    "kinematic_residual": 0.086322
+  },
+  "BeamPINN": {
+    "metrics": {
+      "Slope": {
+        "MAE": 0.003539,
+        "R2": 0.999908
+      },
+      "Deflection": {
+        "MAE": 0.002963,
+        "R2": 0.999955
+      }
+    },
+    "kinematic_residual": 0.006552
+  }
+}
