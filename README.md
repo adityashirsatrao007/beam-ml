@@ -1,4 +1,15 @@
+---
+title: BeamML
+emoji: 🏗️
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 # 🏗️ BeamML: Physics-Informed Neural Networks for Beam Mechanics
+
 
 BeamML is a machine learning framework designed to predict the structural responses (slope $\theta$ and deflection $w$) of single-span beams under point loads. It benchmarks a standard Multilayer Perceptron (**BeamNet**) against a Physics-Informed Neural Network (**BeamPINN**), demonstrating how integrating physical laws directly into the neural network's loss function leads to massive improvements in accuracy, boundary condition enforcement, and kinematic consistency.
 
