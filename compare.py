@@ -34,26 +34,27 @@ IMG_DIR.mkdir(parents=True, exist_ok=True)
 CSV_FILE = DATA_DIR / "Slope and Deflection.csv"
 SECTION_IDX = 2
 
-# ── Apple Dark Theme ──────────────────────────────────────────────────
+# ── Light Theme ───────────────────────────────────────────────────────
 plt.rcParams.update({
-    "figure.facecolor": "#1C1C1E",
-    "axes.facecolor": "#2C2C2E",
-    "axes.edgecolor": "#555557",
-    "axes.labelcolor": "white",
-    "axes.titlecolor": "white",
-    "text.color": "white",
-    "xtick.color": "#aeaeb2",
-    "ytick.color": "#aeaeb2",
-    "grid.color": "#3a3a3c",
-    "grid.alpha": 0.3,
-    "legend.facecolor": "#2C2C2E",
-    "legend.edgecolor": "#555557",
-    "legend.labelcolor": "white",
+    "figure.facecolor": "#FFFFFF",
+    "axes.facecolor": "#FFFFFF",
+    "axes.edgecolor": "#000000",
+    "axes.labelcolor": "black",
+    "axes.titlecolor": "black",
+    "text.color": "black",
+    "xtick.color": "black",
+    "ytick.color": "black",
+    "grid.color": "#CCCCCC",
+    "grid.alpha": 0.5,
+    "legend.facecolor": "#FFFFFF",
+    "legend.edgecolor": "#000000",
+    "legend.labelcolor": "black",
     "figure.dpi": 200,
     "savefig.dpi": 200,
     "font.size": 12,
     "axes.titlesize": 14,
 })
+
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -251,7 +252,7 @@ def kinematic_residual(model, X_raw, use_pinn=True):
 
 def plot_comparison(X_test_raw, y_test_raw, net_preds, pinn_preds):
     targets = ["Slope", "Deflection"]
-    colors = {"BeamNet": "#57cda4", "BeamPINN": "#ff9f0a"}
+    colors = {"BeamNet": "#FF6B6B", "BeamPINN": "#00E676"}
 
     fig, axes = plt.subplots(2, 3, figsize=(18, 10), constrained_layout=True)
 
@@ -268,7 +269,7 @@ def plot_comparison(X_test_raw, y_test_raw, net_preds, pinn_preds):
                    label=f"BeamPINN (R²={r2_score(truth, p_pred):.4f})")
         lims = [min(truth.min(), n_pred.min(), p_pred.min()),
                 max(truth.max(), n_pred.max(), p_pred.max())]
-        ax.plot(lims, lims, "--", color="#aeaeb2", lw=1, alpha=0.6)
+        ax.plot(lims, lims, "--", color="#555555", lw=1, alpha=0.6)
         ax.set_xlabel("True")
         ax.set_ylabel("Predicted")
         ax.set_title(f"{target} — Predicted vs True")
@@ -284,7 +285,7 @@ def plot_comparison(X_test_raw, y_test_raw, net_preds, pinn_preds):
                    label="BeamNet")
         ax.scatter(truth, p_res, s=3, alpha=0.3, color=colors["BeamPINN"],
                    label="BeamPINN")
-        ax.axhline(0, color="#aeaeb2", lw=1, ls="--", alpha=0.6)
+        ax.axhline(0, color="#555555", lw=1, ls="--", alpha=0.6)
         ax.set_xlabel("True")
         ax.set_ylabel("Residual")
         ax.set_title(f"{target} — Residuals")
@@ -307,9 +308,10 @@ def plot_comparison(X_test_raw, y_test_raw, net_preds, pinn_preds):
     fig.suptitle("BeamNet vs BeamPINN — Model Comparison",
                  fontsize=16, fontweight="bold", y=1.01)
     fig.savefig(IMG_DIR / "comparison.png", bbox_inches="tight",
-                facecolor="#1C1C1E")
+                facecolor="#FFFFFF")
     plt.close(fig)
     print(f"\n  Comparison plot saved → docs/images/comparison.png")
+
 
 
 # ═══════════════════════════════════════════════════════════════════════
