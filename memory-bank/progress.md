@@ -27,5 +27,6 @@ The project successfully completed training the standard `BeamNet` model and the
 <!-- Agent appends a one-line summary after each session -->
 | Date | What Was Done |
 |------|--------------|
-| 2026-06-02 | Trained physics-informed BeamPINN, benchmarked against standard BeamNet, and updated predictive scripts |
+| 2026-06-02 | Trained physics-informed BeamPINN, benchmarked against standard BeamNet, built Flask web UI, deployed locally with PM2, and published to GitHub |
+
 
