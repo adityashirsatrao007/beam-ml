@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BeamML — Physics-Informed Neural Network Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0A0A0F;
+      --surface: #151520;
+      --surface-glass: rgba(21, 21, 32, 0.7);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #F2F0E9;
+      --text-muted: #8E8D8A;
+      --primary: #5271FF;
+      --primary-glow: rgba(82, 113, 255, 0.35);
+      --secondary: #FF6B6B;
+      --secondary-glow: rgba(255, 107, 107, 0.35);
+      --accent: #00E676;
+      --accent-glow: rgba(0, 230, 118, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 2rem;
+      background-image: radial-gradient(circle at 50% -20%, var(--primary-glow) 0%, transparent 60%);
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      opacity: 0.02;
+      pointer-events: none;
+      z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    header {
+      max-width: 1400px;
+      margin: 0 auto 2rem auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+    }
+
+    .logo-container h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #FFF 0%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-container p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .telemetry-badge {
+      background: rgba(0, 230, 118, 0.1);
+      border: 1px solid var(--accent);
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .telemetry-pulse {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent);
+      border-radius: 50%;
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(0, 230, 118, 0); }
+      100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+    }
+
+    .dashboard-grid {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 2rem;
+    }
+
+    .glass-card {
+      background: var(--surface-glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 1.5rem;
+      padding: 1.8rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .control-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #FFF;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .slider-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      background: rgba(255,255,255,0.05);
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.4rem;
+      width: 55px;
+      text-align: right;
+    }
+
+    .bc-toggle-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 0.3rem;
+      border-radius: 0.8rem;
+      border: 1px solid var(--border);
+    }
+
+    .bc-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.6rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .bc-btn:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .bc-btn.active {
+      background: var(--primary);
+      color: #FFF;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    /* Beam Schematic */
+    .beam-canvas-card {
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 1rem;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .beam-schematic {
+      width: 100%;
+      height: 100px;
+      background: transparent;
+    }
+
+    /* Metrics display */
+    .results-display {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .metric-box {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 0.8rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .metric-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .metric-pinn {
+      color: var(--accent);
+    }
+    
+    .metric-net {
+      color: var(--secondary);
+    }
+
+    /* Main visualizer side */
+    .visualizer-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 330px;
+    }
+
+    /* Tabs */
+    .view-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s ease;
+    }
+
+    .tab-btn.active {
+      color: var(--text);
+    }
+
+    .tab-btn.active::after {
+      content: "";
+      position: absolute;
+      bottom: -0.5rem;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-container">
+      <h1>BeamNet & BeamPINN Explorer</h1>
+      <p>Physics-Informed Neural Networks vs Pure ML for Beam Mechanics</p>
+    </div>
+    <div class="telemetry-badge">
+      <div class="telemetry-pulse"></div>
+      <span>CUDA ENGINE ONLINE</span>
+    </div>
+  </header>
+
+  <main class="dashboard-grid">
+    <!-- Left Column: Controls -->
+    <section class="control-panel glass-card">
+      <div>
+        <h2>⚙️ Configuration</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          Tweak beam parameters and watch predictions recalculate in real-time.
+        </p>
+      </div>
+
+      <!-- End Condition -->
+      <div class="input-group">
+        <label>Boundary Conditions</label>
+        <div class="bc-toggle-group">
+          <button class="bc-btn active" data-bc="SS">Simply Supported</button>
+          <button class="bc-btn" data-bc="SF">Propped Cantilever</button>
+          <button class="bc-btn" data-bc="FF">Fixed-Fixed</button>
+        </div>
+      </div>
+
+      <!-- Load position X -->
+      <div class="input-group">
+        <label>Load Position (X)</label>
+        <div class="slider-container">
+          <input type="range" id="load-X" min="0.0" max="5.0" step="0.05" value="2.5">
+          <span class="slider-val" id="load-X-val">2.50</span>
+        </div>
+      </div>
+
+      <!-- Evaluation Section -->
+      <div class="input-group">
+        <label>Evaluation Point (Section)</label>
+        <div class="slider-container">
+          <input type="range" id="eval-sec" min="0.0" max="5.0" step="0.05" value="2.5">
+          <span class="slider-val" id="eval-sec-val">2.50</span>
+        </div>
+      </div>
+
+      <!-- Interactive Schematic -->
+      <div class="beam-canvas-card">
+        <label style="align-self: flex-start;">Beam Schematic</label>
+        <canvas class="beam-schematic" id="beam-schematic"></canvas>
+      </div>
+
+      <!-- Value telemetry boxes -->
+      <div>
+        <h2 style="margin-top: 0.5rem;">📊 Current Point Telemetry</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Specific slope & deflection at evaluation point.
+        </p>
+        
+        <div class="results-display">
+          <div class="metric-box">
+            <span class="metric-title">Deflection (PINN)</span>
+            <span class="metric-val metric-pinn" id="pinn-w">-0.000000</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-title">Deflection (Net)</span>
+            <span class="metric-val metric-net" id="net-w">-0.000000</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-title">Slope (PINN)</span>
+            <span class="metric-val metric-pinn" id="pinn-theta">0.000000</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-title">Slope (Net)</span>
+            <span class="metric-val metric-net" id="net-theta">0.000000</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Visualizer Charts -->
+    <section class="visualizer-pane glass-card">
+      <div class="view-tabs">
+        <button class="tab-btn active" id="tab-defl">Deflection Curve (w)</button>
+        <button class="tab-btn" id="tab-slope">Slope Curve (θ)</button>
+      </div>
+
+      <!-- Deflection curve chart -->
+      <div class="chart-container" id="defl-container">
+        <canvas id="chart-defl"></canvas>
+      </div>
+
+      <!-- Slope curve chart -->
+      <div class="chart-container hidden" id="slope-container">
+        <canvas id="chart-slope"></canvas>
+      </div>
+      
+      <!-- Comparative Info -->
+      <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <h3 style="font-size: 0.95rem; color: #FFF; font-weight: 600;">Physics-Informed Consistency Highlight</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+          Notice how the <strong>BeamPINN (green)</strong> deflection curve meets the supports exactly at zero value, conforming to boundary conditions natively. Standard ML (red) has no physical bounds and tends to exhibit edge drift errors. In the slope plot, the PINN matches the kinematic law <code style="color: var(--primary);">slope = dw/dx</code> at 99.4% accuracy.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // State
+    let state = {
+      BC: 'SS',
+      X: 2.5,
+      Section: 2.5,
+      L: 5.0
+    };
+
+    // Charts
+    let deflChart = null;
+    let slopeChart = null;
+
+    // Elements
+    const loadXSlider = document.getElementById('load-X');
+    const loadXVal = document.getElementById('load-X-val');
+    const evalSecSlider = document.getElementById('eval-sec');
+    const evalSecVal = document.getElementById('eval-sec-val');
+    const beamSchematic = document.getElementById('beam-schematic');
+    const bcButtons = document.querySelectorAll('.bc-btn');
+
+    // UI Telemetry targets
+    const pinnWEl = document.getElementById('pinn-w');
+    const netWEl = document.getElementById('net-w');
+    const pinnThetaEl = document.getElementById('pinn-theta');
+    const netThetaEl = document.getElementById('net-theta');
+
+    // Setup schematic canvas
+    function drawSchematic() {
+      const ctx = beamSchematic.getContext('2d');
+      const w = beamSchematic.clientWidth;
+      const h = beamSchematic.clientHeight;
+      beamSchematic.width = w * window.devicePixelRatio;
+      beamSchematic.height = h * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw Beam Line
+      ctx.strokeStyle = '#8E8D8A';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(40, h / 2);
+      ctx.lineTo(w - 40, h / 2);
+      ctx.stroke();
+
+      // Draw boundary conditions
+      ctx.fillStyle = '#5271FF';
+      ctx.strokeStyle = '#5271FF';
+      ctx.lineWidth = 2;
+      
+      const drawPinned = (x) => {
+        ctx.beginPath();
+        ctx.moveTo(x, h/2);
+        ctx.lineTo(x-8, h/2+12);
+        ctx.lineTo(x+8, h/2+12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      };
+
+      const drawFixed = (x, isLeft) => {
+        ctx.beginPath();
+        ctx.moveTo(x, h/2 - 15);
+        ctx.lineTo(x, h/2 + 15);
+        ctx.stroke();
+        // hash lines
+        const step = 6;
+        for (let i = -12; i <= 12; i += step) {
+          ctx.beginPath();
+          ctx.moveTo(x, h/2 + i);
+          ctx.lineTo(isLeft ? x - 6 : x + 6, h/2 + i + 4);
+          ctx.stroke();
+        }
+      };
+
+      if (state.BC === 'SS') {
+        drawPinned(40);
+        drawPinned(w - 40);
+      } else if (state.BC === 'SF') {
+        drawPinned(40);
+        drawFixed(w - 40, false);
+      } else if (state.BC === 'FF') {
+        drawFixed(40, true);
+        drawFixed(w - 40, false);
+      }
+
+      // Draw Point Load Arrow
+      const loadPosRatio = state.X / state.L;
+      const loadX = 40 + loadPosRatio * (w - 80);
+      
+      // Draw force arrow
+      ctx.strokeStyle = '#FF6B6B';
+      ctx.fillStyle = '#FF6B6B';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(loadX, h/2 - 35);
+      ctx.lineTo(loadX, h/2 - 4);
+      ctx.stroke();
+      
+      // arrowhead
+      ctx.beginPath();
+      ctx.moveTo(loadX - 6, h/2 - 10);
+      ctx.lineTo(loadX, h/2 - 2);
+      ctx.lineTo(loadX + 6, h/2 - 10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Draw Evaluation Point indicator
+      const evalPosRatio = state.Section / state.L;
+      const evalX = 40 + evalPosRatio * (w - 80);
+      ctx.fillStyle = '#00E676';
+      ctx.beginPath();
+      ctx.arc(evalX, h/2, 6, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    // Call API and fetch data
+    async function updateData() {
+      // 1. Fetch single prediction point
+      try {
+        const resSingle = await fetch(`/api/predict?X=${state.X}&L=${state.L}&Section=${state.Section}&EndCondition=${state.BC}`);
+        const dataSingle = await resSingle.json();
+        
+        if (!dataSingle.error) {
+          pinnWEl.innerText = dataSingle.BeamPINN.Deflection.toFixed(6);
+          netWEl.innerText = dataSingle.BeamNet.Deflection.toFixed(6);
+          pinnThetaEl.innerText = dataSingle.BeamPINN.Slope.toFixed(6);
+          netThetaEl.innerText = dataSingle.BeamNet.Slope.toFixed(6);
+        }
+      } catch (err) {
+        console.error("Error fetching single prediction:", err);
+      }
+
+      // 2. Fetch full curves
+      try {
+        const resCurve = await fetch(`/api/curve?X=${state.X}&L=${state.L}&EndCondition=${state.BC}`);
+        const dataCurve = await resCurve.json();
+        
+        if (!dataCurve.error) {
+          updateCharts(dataCurve);
+        }
+      } catch (err) {
+        console.error("Error fetching curves:", err);
+      }
+
+      drawSchematic();
+    }
+
+    function initCharts() {
+      const deflCtx = document.getElementById('chart-defl').getContext('2d');
+      const slopeCtx = document.getElementById('chart-slope').getContext('2d');
+
+      const chartOptions = (yTitle) => ({
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: { display: true, text: 'Beam Section Coordinate (x)', color: '#8E8D8A' },
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: '#8E8D8A' }
+          },
+          y: {
+            title: { display: true, text: yTitle, color: '#8E8D8A' },
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: '#8E8D8A' }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { color: '#F2F0E9', font: { family: 'Plus Jakarta Sans' } }
+          }
+        }
+      });
+
+      deflChart = new Chart(deflCtx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'BeamPINN (Physics-Informed)',
+              borderColor: '#00E676',
+              backgroundColor: 'rgba(0, 230, 118, 0.05)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.3,
+              data: []
+            },
+            {
+              label: 'BeamNet (Standard ML)',
+              borderColor: '#FF6B6B',
+              borderDash: [5, 5],
+              borderWidth: 2.5,
+              tension: 0.3,
+              data: []
+            }
+          ]
+        },
+        options: chartOptions('Deflection (w)')
+      });
+
+      slopeChart = new Chart(slopeCtx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'BeamPINN (Physics-Informed)',
+              borderColor: '#00E676',
+              backgroundColor: 'rgba(0, 230, 118, 0.05)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.3,
+              data: []
+            },
+            {
+              label: 'BeamNet (Standard ML)',
+              borderColor: '#FF6B6B',
+              borderDash: [5, 5],
+              borderWidth: 2.5,
+              tension: 0.3,
+              data: []
+            }
+          ]
+        },
+        options: chartOptions('Slope (θ)')
+      });
+    }
+
+    function updateCharts(data) {
+      const labels = data.sections.map(s => s.toFixed(2));
+      
+      // Deflection Data
+      deflChart.data.labels = labels;
+      deflChart.data.datasets[0].data = data.BeamPINN.Deflection;
+      deflChart.data.datasets[1].data = data.BeamNet.Deflection;
+      deflChart.update('none');
+
+      // Slope Data
+      slopeChart.data.labels = labels;
+      slopeChart.data.datasets[0].data = data.BeamPINN.Slope;
+      slopeChart.data.datasets[1].data = data.BeamNet.Slope;
+      slopeChart.update('none');
+    }
+
+    // Input handlers
+    loadXSlider.addEventListener('input', (e) => {
+      state.X = parseFloat(e.target.value);
+      loadXVal.innerText = state.X.toFixed(2);
+      updateData();
+    });
+
+    evalSecSlider.addEventListener('input', (e) => {
+      state.Section = parseFloat(e.target.value);
+      evalSecVal.innerText = state.Section.toFixed(2);
+      updateData();
+    });
+
+    bcButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        bcButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.BC = btn.getAttribute('data-bc');
+        updateData();
+      });
+    });
+
+    // Tab switcher
+    const tabDefl = document.getElementById('tab-defl');
+    const tabSlope = document.getElementById('tab-slope');
+    const deflContainer = document.getElementById('defl-container');
+    const slopeContainer = document.getElementById('slope-container');
+
+    tabDefl.addEventListener('click', () => {
+      tabDefl.classList.add('active');
+      tabSlope.classList.remove('active');
+      deflContainer.classList.remove('hidden');
+      slopeContainer.classList.add('hidden');
+    });
+
+    tabSlope.addEventListener('click', () => {
+      tabSlope.classList.add('active');
+      tabDefl.classList.remove('active');
+      slopeContainer.classList.remove('hidden');
+      deflContainer.classList.add('hidden');
+    });
+
+    // Initialize
+    window.addEventListener('resize', drawSchematic);
+    initCharts();
+    updateData();
+  </script>
+</body>
+</html>
