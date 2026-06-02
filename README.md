@@ -49,7 +49,7 @@ By enforcing physical laws ($dw/dx = \theta$ and support boundary conditions), *
 | **Slope MAE** | 0.028321 | **0.003539** | **$-87.5\%$ error** |
 | **Deflection $R^2$** | 0.9899 | **1.0000** | $+1.02\%$ |
 | **Deflection MAE** | 0.043206 | **0.002963** | **$-93.1\%$ error** |
-| **Kinematic Consistency ($|\text{slope} - \frac{dw}{dx}|$)** | 0.086322 | **0.006552** | **$-92.4\%$ error** |
+| **Kinematic Consistency ($\lvert \text{slope} - \frac{dw}{dx} \rvert$)** | 0.086322 | **0.006552** | **$-92.4\%$ error** |
 
 ### Comparison Analysis:
 Below is the evaluation scatter and error distribution comparisons between both models:
