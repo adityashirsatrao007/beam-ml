@@ -43,6 +43,7 @@ ax.set_title('BeamML Training & Deployment Pipeline', color='black', fontsize=18
 
 plt.tight_layout()
 plt.savefig('docs/images/ml-pipeline.png', dpi=200,
-            bbox_inches='tight', facecolor='#1C1C1E')
+            bbox_inches='tight', facecolor='#FFFFFF')
 plt.close()
+
 print("✅ docs/images/ml-pipeline.png generated")
