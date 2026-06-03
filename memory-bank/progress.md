@@ -28,5 +28,6 @@ The project successfully completed training the standard `BeamNet` model and the
 | Date | What Was Done |
 |------|--------------|
 | 2026-06-02 | Trained physics-informed BeamPINN, benchmarked against standard BeamNet, built Flask web UI, deployed locally with PM2, and published to GitHub |
+| 2026-06-03 | Merged ML pipelines into a unified beam_ml_colab.py script for Google Colab and documented epoch training parameters |
 
 
